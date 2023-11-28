@@ -111,7 +111,7 @@ You may be tempted to write
 ```c++
     c.noalias() += b*c
 ```
-This while compile and run without allocating memory, but it will give you the wrong result! Why? Because you are overwriting elements in c that are needed later to compute other elements in c. So here, you need the temporary expansion
+This will compile and run without allocating memory, but it will give you the wrong result! Why? Because you are overwriting elements in c that are needed later to compute other elements in c. So here, you need the temporary expansion
 ```c++
     tmp = b*c;
     c += tmp
@@ -121,7 +121,7 @@ but without the memory allocation it implies...
 So what do we do? We need to pre-allocate a matrix of the right size before entering the real-time loop, and use that pre-allocated matrix inside the real-time critical code. There are many ways to do this. In the code, I've added a variable prealloc, which is passed to the update function (this may not always be the best solution, but it is in our particular use case on the robot). In the function, we then explicitely write what Eigen would do under the hood
 ```c++
     prealloc.noalias() = b*c;
-    c = prealloc;
+    c += prealloc;
 ```
 In the context of the function, that looks like this:
 ```c++
@@ -131,7 +131,7 @@ In the context of the function, that looks like this:
       b += c;
       a.noalias() += b*c;
       prealloc.noalias() = b*c 
-      c = prealloc;
+      c += prealloc;
       Eigen::internal::set_is_malloc_allowed(true)
     }
 ```
